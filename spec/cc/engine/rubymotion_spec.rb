@@ -98,26 +98,6 @@ module CC::Engine
         end
       end
 
-    describe "VariableMethodArgumentsNeedTrailingNils" do
-      it "finds an error" do
-        create_source_file("foo.rb", <<-EORUBY)
-        UIAlertView.alloc.initWithTitle("hello", message: "error", delegate: self, cancelButtonTitle: "oops", otherButtonTitles: "cool", "cool")
-        EORUBY
-
-        output = run_engine
-        #assert includes_check?(output, "Rubymotion/VariableMethodArgumentsNeedTrailingNils")
-      end
-
-      it "finds no error" do
-        create_source_file("foo.rb", <<-EORUBY)
-        UIAlertView.alloc.initWithTitle("hello", message: "error", delegate: self, cancelButtonTitle: "oops", otherButtonTitles: "cool", nil)
-        EORUBY
-
-        output = run_engine
-        #assert !includes_check?(output, "Rubymotion/VariableMethodArgumentsNeedTrailingNils")
-      end
-    end
-
     def includes_check?(output, cop_name)
       issues = output.split("\0").map { |x| JSON.parse(x) }
 
