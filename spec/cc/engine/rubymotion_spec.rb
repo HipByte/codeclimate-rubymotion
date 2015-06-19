@@ -9,21 +9,21 @@ module CC::Engine
       describe "#DeallocMustCallSuper" do
         it "finds an error" do
           create_source_file("foo.rb", <<-EORUBY)
-            
+
             class DoTheWrongThing
               def dealloc
                 "cool"
               end
             end
           EORUBY
-      
+
           output = run_engine
-          assert includes_check?(output, "Rubymotion/DeallocMustCallSuper")
+          assert includes_check?(output, "RubyMotion/Rubymotion/DeallocMustCallSuper")
         end
-      
+
         it "does not find an error" do
           create_source_file("foo.rb", <<-EORUBY)
-            
+
             class DoTheRightThing
               def dealloc
                 "cool"
@@ -31,12 +31,12 @@ module CC::Engine
               end
             end
           EORUBY
-      
+
           output = run_engine
-          assert !includes_check?(output, "Rubymotion/DeallocMustCallSuper")
+          assert !includes_check?(output, "RubyMotion/Rubymotion/DeallocMustCallSuper")
         end
       end
-      
+
       describe "DoNotCallRetaincount" do
         it "finds an error" do
           create_source_file("foo.rb", <<-EORUBY)
@@ -44,23 +44,23 @@ module CC::Engine
               obj.retainCount # don't do this!
             end
           EORUBY
-      
+
           output = run_engine
-          assert includes_check?(output, "Rubymotion/DoNotCallRetaincount")
+          assert includes_check?(output, "RubyMotion/Rubymotion/DoNotCallRetaincount")
         end
-      
+
         it "finds an error with send" do
           create_source_file("foo.rb", <<-EORUBY)
             def coolerMethod(obj)
               obj.send(:retainCount) # don't do this either!
             end
           EORUBY
-      
+
           output = run_engine
-          assert includes_check?(output, "Rubymotion/DoNotCallRetaincount")
+          assert includes_check?(output, "RubyMotion/Rubymotion/DoNotCallRetaincount")
         end
       end
-      
+
       describe "InitMustReturnSelf" do
         it "finds an error with no return" do
           create_source_file("foo.rb", <<-EORUBY)
@@ -68,11 +68,11 @@ module CC::Engine
                1+1
              end
           EORUBY
-      
+
           output = run_engine
-          assert includes_check?(output, "Rubymotion/InitMustReturnSelf")
+          assert includes_check?(output, "RubyMotion/Rubymotion/InitMustReturnSelf")
         end
-      
+
         it "finds no error with implicit return" do
           create_source_file("foo.rb", <<-EORUBY)
              def init
@@ -80,11 +80,11 @@ module CC::Engine
                self
              end
           EORUBY
-      
+
           output = run_engine
           assert !includes_check?(output, "Rubymotion/InitMustReturnSelf")
         end
-      
+
         it "finds no error with explicit return" do
           create_source_file("foo.rb", <<-EORUBY)
              def init
@@ -92,7 +92,7 @@ module CC::Engine
                return self
              end
           EORUBY
-      
+
           output = run_engine
           assert !includes_check?(output, "Rubymotion/InitMustReturnSelf")
         end
@@ -121,7 +121,7 @@ module CC::Engine
     def includes_check?(output, cop_name)
       issues = output.split("\0").map { |x| JSON.parse(x) }
 
-      !!issues.detect { |i| i["check"] =~ /#{cop_name}$/ }
+      !!issues.detect { |i| i["check_name"] =~ /#{cop_name}$/ }
     end
 
     def create_source_file(path, content)
@@ -139,7 +139,7 @@ module CC::Engine
 
     def run_engine(config_path = nil)
       io = StringIO.new
-      rubymotion = Rubymotion.new(@code, config_path, io)
+      rubymotion = Rubymotion.new(directory: @code, engine_config: {}, io: io)
       rubymotion.run
 
       io.string
