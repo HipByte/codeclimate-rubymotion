@@ -1,0 +1,8 @@
+ruby:
+  enabled: true
+engines:
+  rubocop:
+    config: "config/style_guides/ruby.yml"
+ratings:
+  paths:
+  - "**.rb"
