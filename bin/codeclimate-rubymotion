@@ -6,11 +6,12 @@ Bundler.require(:default)
 require 'rubocop'
 require 'cc/engine/rubymotion'
 
-def parse_engine_config(raw)
-  raw ? JSON.parse(raw) : {}
+if File.exists?("/config.json")
+  engine_config = JSON.parse(File.read("/config.json"))
+else
+  engine_config = {}
 end
 
-engine_config = parse_engine_config(ENV['ENGINE_CONFIG'])
 CC::Engine::Rubymotion.new(
   directory: "/code", engine_config: engine_config, io: STDOUT
 ).run
