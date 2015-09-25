@@ -98,10 +98,53 @@ module CC::Engine
         end
       end
 
+      describe 'with exclude paths config' do
+        it "doesn't run an analysis on a file listed in excluded paths" do
+          file_source = <<-EORUBY
+            def init
+              1+1
+            end
+          EORUBY
+
+          create_source_file('foo.rb', file_source)
+          create_source_file('bar.rb', file_source)
+
+          output = run_engine({"exclude_paths" => %w(bar.rb)})
+          assert !includes_file?(output, 'bar.rb')
+        end
+
+      end
+
+      describe 'with include paths config' do
+        it "runs an analysis only on files listed in included paths" do
+          file_source = <<-EORUBY
+            def init
+              1+1
+            end
+          EORUBY
+
+          create_source_file('foo.rb', file_source)
+          create_source_file('bar.rb', file_source)
+
+          output = run_engine({"include_paths" => %w(foo.rb)})
+          assert !includes_file?(output, 'bar.rb')
+        end
+      end
+
     def includes_check?(output, cop_name)
-      issues = output.split("\0").map { |x| JSON.parse(x) }
+      issues = parse_output(output)
 
       !!issues.detect { |i| i["check_name"] =~ /#{cop_name}$/ }
+    end
+
+    def includes_file?(output, file_name)
+      issues = parse_output(output)
+
+      !!issues.detect { |i| i["check_name"] =~ /#{file_name}$/ }
+    end
+
+    def parse_output(output)
+      output.split("\0").map { |x| JSON.parse(x) }
     end
 
     def create_source_file(path, content)
@@ -117,9 +160,9 @@ module CC::Engine
       end
     end
 
-    def run_engine(config_path = nil)
+    def run_engine(config = {})
       io = StringIO.new
-      rubymotion = Rubymotion.new(directory: @code, engine_config: {}, io: io)
+      rubymotion = Rubymotion.new(directory: @code, engine_config: config, io: io)
       rubymotion.run
 
       io.string
