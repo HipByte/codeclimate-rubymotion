@@ -13,34 +13,55 @@ module CC
 
       def run
         Dir.chdir(@directory) do
-          Dir["**/*.rb"].each do |path|
+          files_to_analyze.each do |path|
             parsed = RuboCop::ProcessedSource.new(File.read(path), path)
 
             rubocop_team.inspect_file(parsed).each do |violation|
-              unless exclude?(path)
-                json = {
-                  type: "Issue",
-                  check_name: "RubyMotion/#{violation.cop_name}",
-                  description: violation.message,
-                  categories: ["Style"],
-                  remediation_points: 50_000,
-                  location: {
-                    path: path,
-                    lines: {
-                      begin: violation.location.first_line,
-                      end: violation.location.last_line,
-                    }
+              json = {
+                type: "Issue",
+                check_name: "RubyMotion/#{violation.cop_name}",
+                description: violation.message,
+                categories: ["Style"],
+                remediation_points: 50_000,
+                location: {
+                  path: path,
+                  lines: {
+                    begin: violation.location.first_line,
+                    end: violation.location.last_line,
                   }
-                }.to_json
+                }
+              }.to_json
 
-                @io.print "#{json}\0"
-              end
+              @io.print "#{json}\0"
             end
           end
         end
       end
 
       private
+
+      def files_to_analyze
+        if @engine_config["include_paths"]
+          build_files_with_inclusions(@engine_config["include_paths"])
+        else
+          build_files_with_exclusions(@engine_config["exclude_paths"] || [])
+        end
+      end
+
+      def build_files_with_inclusions(inclusions)
+        inclusions.map do |include_path|
+          if include_path =~ %r{/$}
+            Dir.glob("#{include_path}/**/*.rb")
+          else
+            include_path if include_path =~ /\.rb$/
+          end
+        end.flatten.compact
+      end
+
+      def build_files_with_exclusions(exclusions)
+        files = Dir.glob("**/*.rb")
+        files.reject { |f| exclusions.include?(f) }
+      end
 
       def exclude?(path)
         exclusions = @engine_config["exclude_paths"] || []
