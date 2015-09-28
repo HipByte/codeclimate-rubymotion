@@ -63,11 +63,6 @@ module CC
         files.reject { |f| exclusions.include?(f) }
       end
 
-      def exclude?(path)
-        exclusions = @engine_config["exclude_paths"] || []
-        exclusions.include?(path)
-      end
-
       def rubocop_team
         RuboCop::Cop::Team.new(CC::RubymotionCops.all, rubocop_config)
       end
