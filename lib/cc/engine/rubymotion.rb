@@ -1,5 +1,6 @@
 require 'rubocop'
 require 'cc/rubymotion_cops'
+require 'cc/engine/analyzable_files'
 require 'json'
 
 module CC
@@ -41,26 +42,7 @@ module CC
       private
 
       def files_to_analyze
-        if @engine_config["include_paths"]
-          build_files_with_inclusions(@engine_config["include_paths"])
-        else
-          build_files_with_exclusions(@engine_config["exclude_paths"] || [])
-        end
-      end
-
-      def build_files_with_inclusions(inclusions)
-        inclusions.map do |include_path|
-          if include_path =~ %r{/$}
-            Dir.glob("#{include_path}/**/*.rb")
-          else
-            include_path if include_path =~ /\.rb$/
-          end
-        end.flatten.compact
-      end
-
-      def build_files_with_exclusions(exclusions)
-        files = Dir.glob("**/*.rb")
-        files.reject { |f| exclusions.include?(f) }
+        AnalyzableFiles.new(@engine_config).all
       end
 
       def rubocop_team
@@ -70,7 +52,6 @@ module CC
       def rubocop_config
         @rubocop_config ||= RuboCop::Config.new({}, "")
       end
-
     end
   end
 end
